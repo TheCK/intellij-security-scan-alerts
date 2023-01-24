@@ -1,0 +1,47 @@
+<idea-plugin>
+    <id>org.ck.GitHubSecurityScanAlerts</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>GitHubSecurityScanAlerts</name>
+
+    <vendor email="plugins@theck.dev" url="https://theck.dev">TheCK</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    Will download security scan alerts from GitHub
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable groupId="tools" displayName="GitHub Security Scan Alerts"
+                             instance="org.ck.githubsecurityscanalerts.ui.settings.ProjectConfigurable"
+                             nonDefaultProject="true"/>
+
+        <toolWindow id="GitHub Security Scan Alerts" anchor="bottom"
+                    factoryClass="org.ck.githubsecurityscanalerts.ui.tool.AlertsToolWindowFactory"
+                    canCloseContents="false"/>
+
+        <projectService serviceImplementation="org.ck.githubsecurityscanalerts.store.settings.ProjectSettingsStore"/>
+        <projectService serviceImplementation="org.ck.githubsecurityscanalerts.store.alerts.AlertsStore"/>
+
+        <notificationGroup id="GitHub Security Scan Alerts: Connection Test"
+                           displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <action id="DownloadGitHubAlerts"
+                class="org.ck.githubsecurityscanalerts.action.DownloadAction"
+                text="Download Alerts">
+            <keyboard-shortcut first-keystroke="shift ctrl d" keymap="$default"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
