@@ -1,5 +1,7 @@
 package org.ck.githubsecurityscanalerts.ui.settings;
 
+import com.intellij.credentialStore.Credentials;
+import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
@@ -9,6 +11,7 @@ import com.intellij.util.ui.JBUI;
 import org.ck.githubsecurityscanalerts.github.GithubClient;
 import org.ck.githubsecurityscanalerts.store.settings.ProjectSettings;
 import org.ck.githubsecurityscanalerts.store.settings.ProjectSettingsStore;
+import org.ck.githubsecurityscanalerts.store.settings.StoreUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +21,8 @@ import java.util.Optional;
 import static java.awt.GridBagConstraints.*;
 
 public class SettingsPanel {
+
+  private final Project project;
   private final JPanel root;
 
   private JBTextField githubToken;
@@ -29,6 +34,7 @@ public class SettingsPanel {
   private JButton testButton;
 
   public SettingsPanel(Project project) {
+    this.project = project;
     root = new JPanel(new BorderLayout());
 
     JPanel grid = new JPanel(new GridBagLayout());
@@ -64,11 +70,14 @@ public class SettingsPanel {
           @Override
           public void actionPerformed(ActionEvent e) {
             final Optional<Long> alertCount =
-                new GithubClient(getGithubToken()).getAlertCount(getGithubOwner(), getGithubRepo());
+                new GithubClient(
+                        PasswordSafe.getInstance()
+                            .getPassword(StoreUtil.getTokenAttributes(project)))
+                    .getAlertCount(getGithubOwner(), getGithubRepo());
 
             if (alertCount.isPresent()) {
               NotificationGroupManager.getInstance()
-                  .getNotificationGroup("GitHub Security Scan Alerts: Connection Test")
+                  .getNotificationGroup("GitHub Security Scan Alerts")
                   .createNotification(
                       "Connection OK: %d alerts found".formatted(alertCount.get()),
                       NotificationType.INFORMATION)
@@ -76,7 +85,7 @@ public class SettingsPanel {
                   .notify(project);
             } else {
               NotificationGroupManager.getInstance()
-                  .getNotificationGroup("GitHub Security Scan Alerts: Connection Test")
+                  .getNotificationGroup("GitHub Security Scan Alerts")
                   .createNotification("Connection failed", NotificationType.WARNING)
                   .setImportant(true)
                   .notify(project);
@@ -95,19 +104,26 @@ public class SettingsPanel {
   }
 
   public void load(ProjectSettings projectSettings) {
-    githubToken.setText(projectSettings.getGithubToken());
+    if (PasswordSafe.getInstance().getPassword(StoreUtil.getTokenAttributes(project)) != null) {
+      githubToken.getEmptyText().setText("< Saved Github token >");
+    }
+
     githubOwner.setText(projectSettings.getGithubOwner());
     githubRepo.setText(projectSettings.getGithubRepo());
   }
 
   public void save(ProjectSettings projectSettings) {
-    projectSettings.setGithubToken(getGithubToken());
+    if (!getGithubToken().isEmpty()) {
+      Credentials credentials = new Credentials(null, getGithubToken());
+      PasswordSafe.getInstance().set(StoreUtil.getTokenAttributes(project), credentials);
+    }
+
     projectSettings.setGithubOwner(getGithubOwner());
     projectSettings.setGithubRepo(getGithubRepo());
   }
 
   public boolean isModified(ProjectSettings projectSettings) {
-    return !projectSettings.getGithubToken().equals(getGithubToken())
+    return !getGithubToken().isEmpty()
         || !projectSettings.getGithubOwner().equals(getGithubOwner())
         || !projectSettings.getGithubRepo().equals(getGithubRepo());
   }

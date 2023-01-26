@@ -32,8 +32,7 @@
         <projectService serviceImplementation="org.ck.githubsecurityscanalerts.store.settings.ProjectSettingsStore"/>
         <projectService serviceImplementation="org.ck.githubsecurityscanalerts.store.alerts.AlertsStore"/>
 
-        <notificationGroup id="GitHub Security Scan Alerts: Connection Test"
-                           displayType="BALLOON"/>
+        <notificationGroup id="GitHub Security Scan Alerts" displayType="BALLOON"/>
     </extensions>
 
     <actions>
